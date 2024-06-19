@@ -40,7 +40,7 @@ If ARG is not nil, use the value as argument and store it in `mojo-run-arguments
   (interactive "P")
   (when arg
     (setq mojo-build-arguments (read-from-minibuffer "Mojo build arguments: " "")))
-  (if (eq mojo-build-arguments "")
+  (if (string-empty-p mojo-package-arguments)
       (compile (concat "mojo build " buffer-file-name))
     (compile (concat "mojo build " mojo-build-arguments " " buffer-file-name))))
 
@@ -52,7 +52,7 @@ Without prefix argument, `default-directory' is used as the path."
   (interactive "P")
   (when arg
     (setq mojo-package-arguments (read-from-minibuffer "Mojo package arguments: " "")))
-  (if (eq mojo-package-arguments "")
+  (if (string-empty-p mojo-package-arguments)
       (compile (concat "mojo package "
                        ;; (string-trim-right (expand-file-name default-directory) "/?")
                        (directory-file-name (expand-file-name default-directory))
