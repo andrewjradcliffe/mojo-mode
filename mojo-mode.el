@@ -11,6 +11,11 @@
 (require 'pcase)
 (require 'seq)
 
+(add-to-list 'load-path (or (and load-file-name (directory-file-name (file-name-directory load-file-name))) (car load-path)))
+
+;;; `mojo-mode-ext'
+(require 'mojo-mode-ext)
+
 ;;;###autoload🔥
 ;; (add-to-list 'auto-mode-alist
 ;;              (cons (purecopy (concat (rx "." (or "mojo" "🔥")) "\\'")) 'mojo-mode))
@@ -53,7 +58,7 @@
     (define-key map "\C-c\C-e" #'mojo-shell-send-statement)
     (define-key map "\C-c\C-r" #'mojo-shell-send-region)
     (define-key map "\C-\M-x"  #'mojo-shell-send-defun)
-    (define-key map "\C-c\C-c" #'mojo-shell-send-buffer)
+    ;;(define-key map "\C-c\C-c" #'mojo-shell-send-buffer)
     (define-key map "\C-c\C-l" #'mojo-shell-send-file)
     (define-key map "\C-c\C-z" #'mojo-shell-switch-to-shell)
     ;; Some util commands
@@ -65,6 +70,15 @@
     (define-key map "\C-c\C-if" #'mojo-fix-imports)
     (define-key map "\C-c\C-ir" #'mojo-remove-import)
     (define-key map "\C-c\C-is" #'mojo-sort-imports)
+    ;; from `mojo-mode-ext'
+    ;; (define-key map (kbd "C-c C-c C-r") #'mojo-run)
+    ;; (define-key map (kbd "C-c C-c C-b") #'mojo-build)
+    ;; (define-key map (kbd "C-c C-c C-f") #'mojo-format)
+    ;; (define-key map (kbd "C-c C-c C-t") #'mojo-test)
+    (define-key map "\C-c\C-c\C-r" #'mojo-run)
+    (define-key map "\C-c\C-c\C-b" #'mojo-build)
+    (define-key map "\C-c\C-c\C-f" #'mojo-format)
+    (define-key map "\C-c\C-c\C-t" #'mojo-test)
     ;; Utilities
     (substitute-key-definition #'complete-symbol #'completion-at-point
                                map global-map)
@@ -2748,8 +2762,6 @@ implementations: `mojo-mode' and `mojo-ts-mode'."
                mojo-shell-package-enable
                mojo-shell-completion-complete-or-indent  ))
   (put sym 'completion-predicate #'mojo-shell--completion-predicate))
-
-
 
 (provide 'mojo-mode)
 
