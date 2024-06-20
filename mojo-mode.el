@@ -121,8 +121,8 @@
         "----"
         ["Check file" mojo-check
          :help "Check file for errors"]
-        ["Help on symbol" mojo-eldoc-at-point
-         :help "Get help on symbol at point"]
+        ;; ["Help on symbol" mojo-eldoc-at-point
+        ;;  :help "Get help on symbol at point"]
         ["Complete symbol" completion-at-point
          :help "Complete symbol before point"]
         "-----"
@@ -2198,6 +2198,8 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
 ;;; Code check: start=5257, end=5294
 
 ;;; ElDoc: start=5299, end=5433
+;;; Just use eglot -- it's ElDoc integration is sufficient.
+;;; It is reasonable to assume that if one has Mojo, then one has its language server.
 
 ;;; Hideshow: start=5439, end=5474
 
@@ -2879,16 +2881,6 @@ implementations: `mojo-mode' and `mojo-ts-mode'."
                                                         (current-column))))
                 (^ '(- (1+ (current-indentation))))))
 
-  ;; (with-no-warnings
-  ;;   ;; suppress warnings about eldoc-documentation-function being obsolete
-  ;;   (if (null eldoc-documentation-function)
-  ;;       ;; Emacs<25
-  ;;       (setq-local eldoc-documentation-function #'mojo-eldoc-function)
-  ;;     (if (boundp 'eldoc-documentation-functions)
-  ;;         (add-hook 'eldoc-documentation-functions #'mojo-eldoc-function nil t)
-  ;;       (add-function :before-until (local 'eldoc-documentation-function)
-  ;;                     #'mojo-eldoc-function))))
-
   ;; TODO: Use tree-sitter to figure out the block in `mojo-ts-mode'.
   (dolist (mode '(mojo-mode))
     (add-to-list
@@ -2986,7 +2978,6 @@ implementations: `mojo-mode' and `mojo-ts-mode'."
 ;; Commands that only make sense in the Mojo shell or when editing
 ;; Mojo code.
 (dolist (sym '(mojo-describe-at-point
-               mojo-eldoc-at-point
                mojo-shell-completion-native-toggle
                mojo-shell-completion-native-turn-off
                mojo-shell-completion-native-turn-on
