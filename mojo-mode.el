@@ -2203,6 +2203,42 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
 
 ;;; Hideshow: start=5439, end=5474
 
+(defun mojo-hideshow-forward-sexp-function (_arg)
+  "Mojo specific `forward-sexp' function for `hs-minor-mode'.
+Argument ARG is ignored."
+  (mojo-nav-end-of-block))
+
+(defun mojo-hideshow-find-next-block (regexp maxp comments)
+  "Mojo specific `hs-find-next-block' function for `hs-minor-mode'.
+Call `mojo-nav-forward-block' to find next block and check if
+block-start ends within MAXP.  If COMMENTS is not nil, comments
+are also searched.  REGEXP is passed to `looking-at' to set
+`match-data'."
+  (let* ((next-block (save-excursion
+                       (or (and
+                            (mojo-info-looking-at-beginning-of-block)
+                            (re-search-forward
+                             (mojo-rx block-start) maxp t))
+                           (and (mojo-nav-forward-block)
+                                (< (point) maxp)
+                                (re-search-forward
+                                 (mojo-rx block-start) maxp t))
+                           (1+ maxp))))
+         (next-comment
+          (or (when comments
+                (save-excursion
+                  (cl-loop while (re-search-forward "#" maxp t)
+                           if (mojo-syntax-context 'comment)
+                           return (point))))
+              (1+ maxp)))
+         (next-block-or-comment (min next-block next-comment)))
+    (when (<= next-block-or-comment maxp)
+      (goto-char next-block-or-comment)
+      (save-excursion
+        (beginning-of-line)
+        (looking-at regexp)))))
+
+
 ;;; Imenu: start=5479, end=5628
 
 ;;; Misc helpers
