@@ -621,15 +621,6 @@ Which one will be chosen depends on the value of
    ((rx (or "\"\"\"" "'''"))
     (0 (ignore (mojo-syntax-stringify))))))
 
-(define-obsolete-variable-alias 'mojo--prettify-symbols-alist
-  'mojo-prettify-symbols-alist "26.1")
-
-(defvar mojo-prettify-symbols-alist
-  '(("lambda"  . ?λ)
-    ("and" . ?∧)
-    ("or" . ?∨))
-  "Value for `prettify-symbols-alist' in `mojo-mode'.")
-
 (defsubst mojo-syntax-count-quotes (quote-char &optional point limit)
   "Count number of quotes around point (max is 3).
 QUOTE-CHAR is the quote char to count.  Optional argument POINT is
@@ -2853,7 +2844,7 @@ returned as is."
     (save-excursion (insert (make-string 2 last-command-event)))))
 
 (defvar electric-indent-inhibit)
-(defvar prettify-symbols-alist)
+;; (defvar prettify-symbols-alist)
 
 ;;;###autoload
 (define-derived-mode mojo-base-mode prog-mode "Mojo"
@@ -2923,8 +2914,6 @@ implementations: `mojo-mode' and `mojo-ts-mode'."
               (lambda ()
                 "`outline-level' function for Mojo mode."
                 (1+ (/ (current-indentation) mojo-indent-offset))))
-
-  (setq-local prettify-symbols-alist mojo-prettify-symbols-alist)
   )
 
 ;;;###autoload
