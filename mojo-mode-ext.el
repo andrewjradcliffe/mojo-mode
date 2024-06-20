@@ -9,6 +9,7 @@
 
 (defvar mojo-run-arguments ""
   "Holds arguments for 'mojo run', similar to `compilation-arguments`.")
+
 (defvar mojo-build-arguments ""
   "Holds arguments for 'mojo build', similar to `compilation-arguments`.")
 
@@ -16,11 +17,10 @@
   "Holds arguments for 'mojo package', similar to `compilation-arguments`.")
 
 (defvar mojo-format-arguments ""
-  "Holds arguments for 'mojo format', similar to `compilation-arguments`."
-  )
+  "Holds arguments for 'mojo format', similar to `compilation-arguments`.")
+
 (defvar mojo-test-arguments ""
-  "Holds arguments for 'mojo test', similar to `compilation-arguments`."
-  )
+  "Holds arguments for 'mojo test', similar to `compilation-arguments`.")
 
 (defun mojo-run (&optional arg)
   "Run 'mojo run' for the current file.
@@ -36,7 +36,10 @@ If ARG is not nil, use the value as argument and store it in `mojo-run-arguments
 
 
 (defun mojo-build (&optional arg)
-  "Run 'mojo build' for the current file."
+  "Run 'mojo build' for the current file.
+
+If ARG is not nil, use the value as argument and store it in `mojo-build-arguments'.
+"
   (interactive "P")
   (when arg
     (setq mojo-build-arguments (read-from-minibuffer "Mojo build arguments: " "")))
@@ -54,13 +57,14 @@ Without prefix argument, `default-directory' is used as the path."
     (setq mojo-package-arguments (read-from-minibuffer "Mojo package arguments: " "")))
   (if (string-empty-p mojo-package-arguments)
       (compile (concat "mojo package "
-                       ;; (string-trim-right (expand-file-name default-directory) "/?")
-                       (directory-file-name (expand-file-name default-directory))
-                       ))
+                       (directory-file-name (expand-file-name default-directory))))
     (compile (concat "mojo package " mojo-package-arguments))))
 
 (defun mojo-format (&optional arg)
-  "Run 'mojo format' for the current file."
+  "Run 'mojo format' for the current file.
+
+If ARG is not nil, use the value as argument and store it in `mojo-format-arguments'.
+"
   (interactive "P")
   (when arg
     (setq mojo-format-arguments
@@ -70,7 +74,10 @@ Without prefix argument, `default-directory' is used as the path."
     (compile (concat "mojo format " mojo-format-arguments " " buffer-file-name))))
 
 (defun mojo-test (&optional arg)
-  "Run 'mojo test'."
+  "Run 'mojo test'.
+
+If ARG is not nil, use the value as argument and store it in `mojo-test-arguments'.
+"
   (interactive "P")
   (when arg
     (setq mojo-format-arguments
