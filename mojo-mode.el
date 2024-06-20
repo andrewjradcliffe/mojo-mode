@@ -1957,6 +1957,240 @@ position, else returns nil."
 
 ;;; Fill paragraph: start=4826, end=5060
 
+(defcustom mojo-fill-comment-function 'mojo-fill-comment
+  "Function to fill comments.
+This is the function used by `mojo-fill-paragraph' to
+fill comments."
+  :type 'symbol)
+
+(defcustom mojo-fill-string-function 'mojo-fill-string
+  "Function to fill strings.
+This is the function used by `mojo-fill-paragraph' to
+fill strings."
+  :type 'symbol)
+
+(defcustom mojo-fill-decorator-function 'mojo-fill-decorator
+  "Function to fill decorators.
+This is the function used by `mojo-fill-paragraph' to
+fill decorators."
+  :type 'symbol)
+
+(defcustom mojo-fill-paren-function 'mojo-fill-paren
+  "Function to fill parens.
+This is the function used by `mojo-fill-paragraph' to
+fill parens."
+  :type 'symbol)
+
+(defcustom mojo-fill-docstring-style 'pep-257
+  "Style used to fill docstrings.
+This affects `mojo-fill-string' behavior with regards to
+triple quotes positioning.
+
+Possible values are `django', `onetwo', `pep-257', `pep-257-nn',
+`symmetric', and nil.  A value of nil won't care about quotes
+position and will treat docstrings a normal string, any other
+value may result in one of the following docstring styles:
+
+`django':
+
+    \"\"\"
+    Process foo, return bar.
+    \"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\"
+
+`onetwo':
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+
+    \"\"\"
+
+`pep-257':
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+
+    \"\"\"
+
+`pep-257-nn':
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\"
+
+`symmetric':
+
+    \"\"\"Process foo, return bar.\"\"\"
+
+    \"\"\"
+    Process foo, return bar.
+
+    If processing fails throw ProcessingError.
+    \"\"\""
+  :type '(choice
+          (const :tag "Don't format docstrings" nil)
+          (const :tag "Django's coding standards style." django)
+          (const :tag "One newline and start and Two at end style." onetwo)
+          (const :tag "PEP-257 with 2 newlines at end of string." pep-257)
+          (const :tag "PEP-257 with 1 newline at end of string." pep-257-nn)
+          (const :tag "Symmetric style." symmetric))
+  :safe (lambda (val)
+          (memq val '(django onetwo pep-257 pep-257-nn symmetric nil))))
+
+(defun mojo-fill-paragraph (&optional justify)
+  "`fill-paragraph-function' handling multi-line strings and possibly comments.
+If any of the current line is in or at the end of a multi-line string,
+fill the string or the paragraph of it that point is in, preserving
+the string's indentation.
+Optional argument JUSTIFY defines if the paragraph should be justified."
+  (interactive "P")
+  (save-excursion
+    (cond
+     ;; Comments
+     ((mojo-syntax-context 'comment)
+      (funcall mojo-fill-comment-function justify))
+     ;; Strings/Docstrings
+     ((mojo-info-triple-quoted-string-p)
+      (funcall mojo-fill-string-function justify))
+     ;; Decorators
+     ((equal (char-after (save-excursion
+                           (mojo-nav-beginning-of-statement))) ?@)
+      (funcall mojo-fill-decorator-function justify))
+     ;; Parens
+     ((or (mojo-syntax-context 'paren)
+          (looking-at (mojo-rx open-paren))
+          (save-excursion
+            (skip-syntax-forward "^(" (line-end-position))
+            (looking-at (mojo-rx open-paren))))
+      (funcall mojo-fill-paren-function justify))
+     (t t))))
+
+(defun mojo-fill-comment (&optional justify)
+  "Comment fill function for `mojo-fill-paragraph'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  (fill-comment-paragraph justify))
+
+(defun mojo-fill-string (&optional justify)
+  "String fill function for `mojo-fill-paragraph'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  (let* ((str-start-pos
+          (set-marker
+           (make-marker)
+           (mojo-info-triple-quoted-string-p)))
+         ;; JT@2021-09-21: Since bug#49518's fix this will always be 1
+         (num-quotes (mojo-syntax-count-quotes
+                      (char-after str-start-pos) str-start-pos))
+         (str-line-start-pos
+          (save-excursion
+            (goto-char str-start-pos)
+            (beginning-of-line)
+            (point-marker)))
+         (str-end-pos
+          (save-excursion
+            (goto-char (+ str-start-pos num-quotes))
+            (or (re-search-forward (rx (syntax string-delimiter)) nil t)
+                (goto-char (point-max)))
+            (point-marker)))
+         (multi-line-p
+          ;; Docstring styles may vary for one-liners and multi-liners.
+          (> (count-matches "\n" str-start-pos str-end-pos) 0))
+         (delimiters-style
+          (pcase mojo-fill-docstring-style
+            ;; delimiters-style is a cons cell with the form
+            ;; (START-NEWLINES .  END-NEWLINES). When any of the sexps
+            ;; is NIL means to not add any newlines for start or end
+            ;; of docstring.  See `mojo-fill-docstring-style' for a
+            ;; graphic idea of each style.
+            ('django (cons 1 1))
+            ('onetwo (and multi-line-p (cons 1 2)))
+            ('pep-257 (and multi-line-p (cons nil 2)))
+            ('pep-257-nn (and multi-line-p (cons nil 1)))
+            ('symmetric (and multi-line-p (cons 1 1)))))
+         (fill-paragraph-function))
+    (save-restriction
+      (narrow-to-region str-line-start-pos str-end-pos)
+      (fill-paragraph justify))
+    (save-excursion
+      (when (and (mojo-info-docstring-p) mojo-fill-docstring-style)
+        ;; Add the number of newlines indicated by the selected style
+        ;; at the start of the docstring.
+        (goto-char (+ str-start-pos num-quotes))
+        (delete-region (point) (progn
+                                 (skip-syntax-forward "> ")
+                                 (point)))
+        (and (car delimiters-style)
+             (or (newline (car delimiters-style)) t)
+             ;; Indent only if a newline is added.
+             (indent-according-to-mode))
+        ;; Add the number of newlines indicated by the selected style
+        ;; at the end of the docstring.
+        (goto-char (if (not (= str-end-pos (point-max)))
+                       (- str-end-pos num-quotes)
+                     str-end-pos))
+        (delete-region (point) (progn
+                                 (skip-syntax-backward "> ")
+                                 (point)))
+        (and (cdr delimiters-style)
+             ;; Add newlines only if string ends.
+             (not (= str-end-pos (point-max)))
+             (or (newline (cdr delimiters-style)) t)
+             ;; Again indent only if a newline is added.
+             (indent-according-to-mode))))) t)
+
+(defun mojo-fill-decorator (&optional _justify)
+  "Decorator fill function for `mojo-fill-paragraph'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  t)
+
+(defun mojo-fill-paren (&optional justify)
+  "Paren fill function for `mojo-fill-paragraph'.
+JUSTIFY should be used (if applicable) as in `fill-paragraph'."
+  (save-restriction
+    (narrow-to-region (progn
+                        (while (mojo-syntax-context 'paren)
+                          (goto-char (1- (point))))
+                        (line-beginning-position))
+                      (progn
+                        (when (not (mojo-syntax-context 'paren))
+                          (end-of-line)
+                          (when (not (mojo-syntax-context 'paren))
+                            (skip-syntax-backward "^)")))
+                        (while (and (mojo-syntax-context 'paren)
+                                    (not (eobp)))
+                          (goto-char (1+ (point))))
+                        (point)))
+    (let ((paragraph-start "\f\\|[ \t]*$")
+          (paragraph-separate ",")
+          (fill-paragraph-function))
+      (goto-char (point-min))
+      (fill-paragraph justify))
+    (while (not (eobp))
+      (forward-line 1)
+      (mojo-indent-line)
+      (goto-char (line-end-position))))
+  t)
+
+(defun mojo-do-auto-fill ()
+  "Like `do-auto-fill', but bind `fill-indent-according-to-mode'."
+  (let ((fill-indent-according-to-mode t))
+    (do-auto-fill)))
+
+
 ;;; Skeletons: start=5063, end=5208
 
 ;;; FFAP: start=5212, end=5252
