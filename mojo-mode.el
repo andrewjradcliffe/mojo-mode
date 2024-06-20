@@ -38,47 +38,43 @@
     (define-key map [remap backward-up-list] #'mojo-nav-backward-up-list)
     (define-key map [remap up-list] #'mojo-nav-up-list)
     (define-key map [remap mark-defun] #'mojo-mark-defun)
-    (define-key map "\C-c\C-j" #'imenu)
+    (define-key map (kbd "C-c C-j") #'imenu)
     ;; Indent specific
     (define-key map "\177" #'mojo-indent-dedent-line-backspace)
     (define-key map (kbd "<backtab>") #'mojo-indent-dedent-line)
-    (define-key map "\C-c<" #'mojo-indent-shift-left)
-    (define-key map "\C-c>" #'mojo-indent-shift-right)
+    (define-key map (kbd "C-c <") #'mojo-indent-shift-left)
+    (define-key map (kbd "C-c >") #'mojo-indent-shift-right)
     ;; Skeletons
-    (define-key map "\C-c\C-tc" #'mojo-skeleton-class)
-    (define-key map "\C-c\C-td" #'mojo-skeleton-def)
-    (define-key map "\C-c\C-tf" #'mojo-skeleton-for)
-    (define-key map "\C-c\C-ti" #'mojo-skeleton-if)
-    (define-key map "\C-c\C-tm" #'mojo-skeleton-import)
-    (define-key map "\C-c\C-tt" #'mojo-skeleton-try)
-    (define-key map "\C-c\C-tw" #'mojo-skeleton-while)
+    ;; (define-key map "\C-c\C-tc" #'mojo-skeleton-class)
+    ;; (define-key map "\C-c\C-td" #'mojo-skeleton-def)
+    ;; (define-key map "\C-c\C-tf" #'mojo-skeleton-for)
+    ;; (define-key map "\C-c\C-ti" #'mojo-skeleton-if)
+    ;; (define-key map "\C-c\C-tm" #'mojo-skeleton-import)
+    ;; (define-key map "\C-c\C-tt" #'mojo-skeleton-try)
+    ;; (define-key map "\C-c\C-tw" #'mojo-skeleton-while)
     ;; Shell interaction
-    (define-key map "\C-c\C-p" #'run-mojo)
-    (define-key map "\C-c\C-s" #'mojo-shell-send-string)
-    (define-key map "\C-c\C-e" #'mojo-shell-send-statement)
-    (define-key map "\C-c\C-r" #'mojo-shell-send-region)
-    (define-key map "\C-\M-x"  #'mojo-shell-send-defun)
+    ;; (define-key map "\C-c\C-p" #'run-mojo)
+    ;; (define-key map "\C-c\C-s" #'mojo-shell-send-string)
+    ;; (define-key map "\C-c\C-e" #'mojo-shell-send-statement)
+    ;; (define-key map "\C-c\C-r" #'mojo-shell-send-region)
+    ;; (define-key map "\C-\M-x"  #'mojo-shell-send-defun)
     ;;(define-key map "\C-c\C-c" #'mojo-shell-send-buffer)
-    (define-key map "\C-c\C-l" #'mojo-shell-send-file)
-    (define-key map "\C-c\C-z" #'mojo-shell-switch-to-shell)
+    ;; (define-key map "\C-c\C-l" #'mojo-shell-send-file)
+    ;; (define-key map "\C-c\C-z" #'mojo-shell-switch-to-shell)
     ;; Some util commands
-    (define-key map "\C-c\C-v" #'mojo-check)
-    (define-key map "\C-c\C-f" #'mojo-eldoc-at-point)
-    (define-key map "\C-c\C-d" #'mojo-describe-at-point)
+    ;; (define-key map "\C-c\C-v" #'mojo-check)
+    ;; (define-key map "\C-c\C-f" #'mojo-eldoc-at-point)
+    ;; (define-key map "\C-c\C-d" #'mojo-describe-at-point)
     ;; Import management
-    (define-key map "\C-c\C-ia" #'mojo-add-import)
-    (define-key map "\C-c\C-if" #'mojo-fix-imports)
-    (define-key map "\C-c\C-ir" #'mojo-remove-import)
-    (define-key map "\C-c\C-is" #'mojo-sort-imports)
+    ;; (define-key map "\C-c\C-ia" #'mojo-add-import)
+    ;; (define-key map "\C-c\C-if" #'mojo-fix-imports)
+    ;; (define-key map "\C-c\C-ir" #'mojo-remove-import)
+    ;; (define-key map "\C-c\C-is" #'mojo-sort-imports)
     ;; from `mojo-mode-ext'
-    ;; (define-key map (kbd "C-c C-c C-r") #'mojo-run)
-    ;; (define-key map (kbd "C-c C-c C-b") #'mojo-build)
-    ;; (define-key map (kbd "C-c C-c C-f") #'mojo-format)
-    ;; (define-key map (kbd "C-c C-c C-t") #'mojo-test)
-    (define-key map "\C-c\C-c\C-r" #'mojo-run)
-    (define-key map "\C-c\C-c\C-b" #'mojo-build)
-    (define-key map "\C-c\C-c\C-f" #'mojo-format)
-    (define-key map "\C-c\C-c\C-t" #'mojo-test)
+    (define-key map (kbd "C-c C-c C-r") #'mojo-run)
+    (define-key map (kbd "C-c C-c C-b") #'mojo-build)
+    (define-key map (kbd "C-c C-c C-f") #'mojo-format)
+    (define-key map (kbd "C-c C-c C-t") #'mojo-test)
     ;; Utilities
     (substitute-key-definition #'complete-symbol #'completion-at-point
                                map global-map)
@@ -99,41 +95,41 @@
         ["Jump to def/class" imenu
          :help "Jump to a class or function definition"]
         "--"
-        ("Skeletons")
-        "---"
-        ["Start interpreter" run-mojo
-         :help "Run inferior Mojo process in a separate buffer"]
-        ["Switch to shell" mojo-shell-switch-to-shell
-         :help "Switch to running inferior Mojo process"]
-        ["Eval string" mojo-shell-send-string
-         :help "Eval string in inferior Mojo session"]
-        ["Eval buffer" mojo-shell-send-buffer
-         :help "Eval buffer in inferior Mojo session"]
-        ["Eval statement" mojo-shell-send-statement
-         :help "Eval statement in inferior Mojo session"]
-        ["Eval region" mojo-shell-send-region
-         :help "Eval region in inferior Mojo session"]
-        ["Eval defun" mojo-shell-send-defun
-         :help "Eval defun in inferior Mojo session"]
-        ["Eval file" mojo-shell-send-file
-         :help "Eval file in inferior Mojo session"]
-        ["Debugger" pdb :help "Run pdb under GUD"]
-        "----"
-        ["Check file" mojo-check
-         :help "Check file for errors"]
+        ;; ("Skeletons")
+        ;; "---"
+        ;; ["Start interpreter" run-mojo
+        ;;  :help "Run inferior Mojo process in a separate buffer"]
+        ;; ["Switch to shell" mojo-shell-switch-to-shell
+        ;;  :help "Switch to running inferior Mojo process"]
+        ;; ["Eval string" mojo-shell-send-string
+        ;;  :help "Eval string in inferior Mojo session"]
+        ;; ["Eval buffer" mojo-shell-send-buffer
+        ;;  :help "Eval buffer in inferior Mojo session"]
+        ;; ["Eval statement" mojo-shell-send-statement
+        ;;  :help "Eval statement in inferior Mojo session"]
+        ;; ["Eval region" mojo-shell-send-region
+        ;;  :help "Eval region in inferior Mojo session"]
+        ;; ["Eval defun" mojo-shell-send-defun
+        ;;  :help "Eval defun in inferior Mojo session"]
+        ;; ["Eval file" mojo-shell-send-file
+        ;;  :help "Eval file in inferior Mojo session"]
+        ;; ["Debugger" pdb :help "Run pdb under GUD"]
+        ;; "----"
+        ;; ["Check file" mojo-check
+        ;;  :help "Check file for errors"]
         ;; ["Help on symbol" mojo-eldoc-at-point
         ;;  :help "Get help on symbol at point"]
         ["Complete symbol" completion-at-point
          :help "Complete symbol before point"]
-        "-----"
-        ["Add import" mojo-add-import
-         :help "Add an import statement to the top of this buffer"]
-        ["Remove import" mojo-remove-import
-         :help "Remove an import statement from the top of this buffer"]
-        ["Sort imports" mojo-sort-imports
-         :help "Sort the import statements at the top of this buffer"]
-        ["Fix imports" mojo-fix-imports
-         :help "Add missing imports and remove unused ones from the current buffer"]
+        ;; "-----"
+        ;; ["Add import" mojo-add-import
+        ;;  :help "Add an import statement to the top of this buffer"]
+        ;; ["Remove import" mojo-remove-import
+        ;;  :help "Remove an import statement from the top of this buffer"]
+        ;; ["Sort imports" mojo-sort-imports
+        ;;  :help "Sort the import statements at the top of this buffer"]
+        ;; ["Fix imports" mojo-fix-imports
+        ;;  :help "Add missing imports and remove unused ones from the current buffer"]
         ))
     map)
   "Keymap for `mojo-mode'.")
@@ -2844,7 +2840,6 @@ returned as is."
     (save-excursion (insert (make-string 2 last-command-event)))))
 
 (defvar electric-indent-inhibit)
-;; (defvar prettify-symbols-alist)
 
 ;;;###autoload
 (define-derived-mode mojo-base-mode prog-mode "Mojo"
