@@ -720,30 +720,6 @@ It makes underscores and dots word constituent chars.")
   :type 'integer
   :safe 'natnump)
 
-(defvar mojo-indent-current-level 0
-  "Deprecated var available for compatibility.")
-
-(defvar mojo-indent-levels '(0)
-  "Deprecated var available for compatibility.")
-
-(make-obsolete-variable
- 'mojo-indent-current-level
- "The indentation API changed to avoid global state.
-The function `mojo-indent-calculate-levels' does not use it
-anymore.  If you were defadvising it and or depended on this
-variable for indentation customizations, refactor your code to
-work on `mojo-indent-calculate-indentation' instead."
- "24.5")
-
-(make-obsolete-variable
- 'mojo-indent-levels
- "The indentation API changed to avoid global state.
-The function `mojo-indent-calculate-levels' does not use it
-anymore.  If you were defadvising it and or depended on this
-variable for indentation customizations, refactor your code to
-work on `mojo-indent-calculate-indentation' instead."
- "24.5")
-
 (defun mojo-indent-guess-indent-offset ()
   "Guess and set `mojo-indent-offset' for the current buffer."
   (interactive)
@@ -2344,10 +2320,6 @@ parent defun name."
   (and (mojo-info-end-of-statement-p)
        (mojo-info-statement-ends-block-p)))
 
-(define-obsolete-function-alias
-  'mojo-info-closing-block
-  #'mojo-info-dedenter-opening-block-position "24.4")
-
 (defun mojo-info-dedenter-opening-block-position ()
   "Return the point of the closest block the current line closes.
 Returns nil if point is not on a dedenter statement or no opening
@@ -2690,39 +2662,6 @@ default to utf-8."
   (goto-char (point-min))
   (forward-line (1- line-number)))
 
-;; Stolen from org-mode
-(defun mojo-util-clone-local-variables (from-buffer &optional regexp)
-  "Clone local variables from FROM-BUFFER.
-Optional argument REGEXP selects variables to clone and defaults
-to \"^mojo-\"."
-  (mapc
-   (lambda (pair)
-     (and (consp pair)
-          (symbolp (car pair))
-          (string-match (or regexp "^mojo-")
-                        (symbol-name (car pair)))
-          (set (make-local-variable (car pair))
-               (cdr pair))))
-   (buffer-local-variables from-buffer)))
-
-(defvar comint-last-prompt-overlay)     ; Shut up, byte compiler.
-
-(defun mojo-util-comint-last-prompt ()
-  "Return comint last prompt overlay start and end.
-This is for compatibility with Emacs < 24.4."
-  (cond ((bound-and-true-p comint-last-prompt-overlay)
-         (cons (overlay-start comint-last-prompt-overlay)
-               (overlay-end comint-last-prompt-overlay)))
-        ((bound-and-true-p comint-last-prompt)
-         comint-last-prompt)
-        (t nil)))
-
-(defun mojo-util-comint-end-of-output-p ()
-  "Return non-nil if the last prompt matches input prompt."
-  (when-let ((prompt (mojo-util-comint-last-prompt)))
-    (mojo-shell-comint-end-of-output-p
-     (buffer-substring-no-properties
-      (car prompt) (cdr prompt)))))
 
 (defun mojo-util-forward-comment (&optional direction)
   "Mojo mode specific version of `forward-comment'.
@@ -2734,99 +2673,6 @@ Optional argument DIRECTION defines the direction to move to."
     (when comment-start
       (goto-char comment-start))
     (forward-comment factor)))
-
-(defun mojo-util-list-directories (directory &optional predicate max-depth)
-  "List DIRECTORY subdirs, filtered by PREDICATE and limited by MAX-DEPTH.
-Argument PREDICATE defaults to `identity' and must be a function
-that takes one argument (a full path) and returns non-nil for
-allowed files.  When optional argument MAX-DEPTH is non-nil, stop
-searching when depth is reached, else don't limit."
-  (let* ((dir (expand-file-name directory))
-         (dir-length (length dir))
-         (predicate (or predicate #'identity))
-         (to-scan (list dir))
-         (tally nil))
-    (while to-scan
-      (let ((current-dir (car to-scan)))
-        (when (funcall predicate current-dir)
-          (setq tally (cons current-dir tally)))
-        (setq to-scan (append (cdr to-scan)
-                              (mojo-util-list-files
-                               current-dir #'file-directory-p)
-                              nil))
-        (when (and max-depth
-                   (<= max-depth
-                       (length (split-string
-                                (substring current-dir dir-length)
-                                "/\\|\\\\" t))))
-          (setq to-scan nil))))
-    (nreverse tally)))
-
-(defun mojo-util-list-files (dir &optional predicate)
-  "List files in DIR, filtering with PREDICATE.
-Argument PREDICATE defaults to `identity' and must be a function
-that takes one argument (a full path) and returns non-nil for
-allowed files."
-  (let ((dir-name (file-name-as-directory dir)))
-    (apply #'nconc
-           (mapcar (lambda (file-name)
-                     (let ((full-file-name
-                            (expand-file-name file-name dir-name)))
-                       (when (and
-                              (not (member file-name '("." "..")))
-                              (funcall (or predicate #'identity)
-                                       full-file-name))
-                         (list full-file-name))))
-                   (directory-files dir-name)))))
-
-(defun mojo-util-list-packages (dir &optional max-depth)
-  "List packages in DIR, limited by MAX-DEPTH.
-When optional argument MAX-DEPTH is non-nil, stop searching when
-depth is reached, else don't limit."
-  (let* ((dir (expand-file-name dir))
-         (parent-dir (file-name-directory
-                      (directory-file-name
-                       (file-name-directory
-                        (file-name-as-directory dir)))))
-         (subpath-length (length parent-dir)))
-    (mapcar
-     (lambda (file-name)
-       (replace-regexp-in-string
-        (rx (or ?\\ ?/)) "." (substring file-name subpath-length)))
-     (mojo-util-list-directories
-      (directory-file-name dir)
-      (lambda (dir)
-        (file-exists-p (expand-file-name "__init__.py" dir)))
-      max-depth))))
-
-(defun mojo-util-popn (lst n)
-  "Return LST first N elements.
-N should be an integer, when negative its opposite is used.
-When N is bigger than the length of LST, the list is
-returned as is."
-  (let* ((n (min (abs n)))
-         (len (length lst))
-         (acc))
-    (if (> n len)
-        lst
-      (while (< 0 n)
-        (setq acc (cons (car lst) acc)
-              lst (cdr lst)
-              n (1- n)))
-      (reverse acc))))
-
-(defun mojo-util-strip-string (string)
-  "Strip STRING whitespace and newlines from end and beginning."
-  (replace-regexp-in-string
-   (rx (or (: string-start (* (any whitespace ?\r ?\n)))
-           (: (* (any whitespace ?\r ?\n)) string-end)))
-   ""
-   string))
-
-(defun mojo-util-valid-regexp-p (regexp)
-  "Return non-nil if REGEXP is valid."
-  (ignore-errors (string-match regexp "") t))
-
 
 ;;; Major mode
 (defun mojo-electric-pair-string-delimiter ()
