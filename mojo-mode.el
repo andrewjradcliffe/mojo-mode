@@ -1938,22 +1938,8 @@ position, else returns nil."
 ;;; PDB Track integration: start=4598, end=4807
 
 ;;; Symbol completion
-
-;; (defun mojo-completion-at-point ()
-;;   "Function for `completion-at-point-functions' in `mojo-mode'.
-;; For this to work as best as possible you should call
-;; `mojo-shell-send-buffer' from time to time so context in
-;; inferior Mojo process is updated properly."
-;;   (let ((process (mojo-shell-get-process)))
-;;     (when (and process
-;;                (mojo-shell-with-shell-buffer
-;;                  (mojo-util-comint-end-of-output-p)))
-;;       (mojo-shell-completion-at-point process))))
-
-;; (define-obsolete-function-alias
-;;   'mojo-completion-complete-at-point
-;;   #'mojo-completion-at-point
-;;   "25.1")
+;;; Use eglot, the Mojo language server, and a
+;;; completion backend of your choosing (e.g. company)
 
 ;;; Fill paragraph: start=4826, end=5060
 
@@ -2240,6 +2226,9 @@ are also searched.  REGEXP is passed to `looking-at' to set
 
 
 ;;; Imenu: start=5479, end=5628
+;;; Again: just use eglot.
+;;; The Mojo language server will provide a better experience than
+;;; providing a "default" imenu implementation like python.el
 
 ;;; Misc helpers
 
@@ -2902,9 +2891,6 @@ implementations: `mojo-mode' and `mojo-ts-mode'."
   (setq-local beginning-of-defun-function #'mojo-nav-beginning-of-defun)
   (setq-local end-of-defun-function #'mojo-nav-end-of-defun)
 
-  ;; (add-hook 'completion-at-point-functions
-  ;;           #'mojo-completion-at-point nil 'local)
-
   (add-hook 'post-self-insert-hook
             #'mojo-indent-post-self-insert-function 'append 'local)
 
@@ -2917,7 +2903,6 @@ implementations: `mojo-mode' and `mojo-ts-mode'."
                                                         (current-column))))
                 (^ '(- (1+ (current-indentation))))))
 
-  ;; TODO: Use tree-sitter to figure out the block in `mojo-ts-mode'.
   (dolist (mode '(mojo-mode))
     (add-to-list
      'hs-special-modes-alist
@@ -2940,10 +2925,6 @@ implementations: `mojo-mode' and `mojo-ts-mode'."
                 (1+ (/ (current-indentation) mojo-indent-offset))))
 
   (setq-local prettify-symbols-alist mojo-prettify-symbols-alist)
-
-  ;; (make-local-variable 'mojo-shell-internal-buffer)
-
-  ;; (add-hook 'flymake-diagnostic-functions #'mojo-flymake nil t)
   )
 
 ;;;###autoload
@@ -2958,73 +2939,52 @@ implementations: `mojo-mode' and `mojo-ts-mode'."
                  . mojo-font-lock-syntactic-face-function)))
   (setq-local syntax-propertize-function
               mojo-syntax-propertize-function)
+
+  ;; Provided by eglot
   ;; (setq-local imenu-create-index-function
   ;;             #'mojo-imenu-create-index)
 
   (add-hook 'which-func-functions #'mojo-info-current-defun nil t)
-
-  ;; (mojo-skeleton-add-menu-items)
 
   (when mojo-indent-guess-indent-offset
     (mojo-indent-guess-indent-offset)))
 
 ;;; Completion predicates for M-x
 ;; Commands that only make sense when editing Mojo code
-(dolist (sym '(mojo-add-import
-               mojo-check
-               mojo-fill-paragraph
-               mojo-fix-imports
-               mojo-indent-dedent-line
-               mojo-indent-dedent-line-backspace
-               mojo-indent-guess-indent-offset
-               mojo-indent-shift-left
-               mojo-indent-shift-right
-               mojo-mark-defun
-               mojo-nav-backward-block
-               mojo-nav-backward-defun
-               mojo-nav-backward-sexp
-               mojo-nav-backward-sexp-safe
-               mojo-nav-backward-statement
-               mojo-nav-backward-up-list
-               mojo-nav-beginning-of-block
-               mojo-nav-beginning-of-statement
-               mojo-nav-end-of-block
-               mojo-nav-end-of-defun
-               mojo-nav-end-of-statement
-               mojo-nav-forward-block
-               mojo-nav-forward-defun
-               mojo-nav-forward-sexp
-               mojo-nav-forward-sexp-safe
-               mojo-nav-forward-statement
-               mojo-nav-if-name-main
-               mojo-nav-up-list
-               ;; mojo-remove-import
-               ;; mojo-shell-send-buffer
-               ;; mojo-shell-send-defun
-               ;; mojo-shell-send-statement
-               ;; mojo-sort-imports
-               ))
-  (put sym 'completion-predicate #'mojo--completion-predicate))
-
-(defun mojo-shell--completion-predicate (_ buffer)
-  (provided-mode-derived-p
-   (buffer-local-value 'major-mode buffer)
-   'mojo-base-mode 'inferior-mojo-mode))
-
-;; Commands that only make sense in the Mojo shell or when editing
-;; Mojo code.
-(dolist (sym '(mojo-describe-at-point
-               mojo-shell-completion-native-toggle
-               mojo-shell-completion-native-turn-off
-               mojo-shell-completion-native-turn-on
-               mojo-shell-completion-native-turn-on-maybe
-               mojo-shell-font-lock-cleanup-buffer
-               mojo-shell-font-lock-toggle
-               mojo-shell-font-lock-turn-off
-               mojo-shell-font-lock-turn-on
-               mojo-shell-package-enable
-               mojo-shell-completion-complete-or-indent  ))
-  (put sym 'completion-predicate #'mojo-shell--completion-predicate))
+;; (defun mojo--completion-predicate (_ buffer)
+;;   (provided-mode-derived-p
+;;    (buffer-local-value 'major-mode buffer)
+;;    'mojo-base-mode))
+;; (dolist (sym '(mojo-add-import
+;;                mojo-check
+;;                mojo-fill-paragraph
+;;                mojo-fix-imports
+;;                mojo-indent-dedent-line
+;;                mojo-indent-dedent-line-backspace
+;;                mojo-indent-guess-indent-offset
+;;                mojo-indent-shift-left
+;;                mojo-indent-shift-right
+;;                mojo-mark-defun
+;;                mojo-nav-backward-block
+;;                mojo-nav-backward-defun
+;;                mojo-nav-backward-sexp
+;;                mojo-nav-backward-sexp-safe
+;;                mojo-nav-backward-statement
+;;                mojo-nav-backward-up-list
+;;                mojo-nav-beginning-of-block
+;;                mojo-nav-beginning-of-statement
+;;                mojo-nav-end-of-block
+;;                mojo-nav-end-of-defun
+;;                mojo-nav-end-of-statement
+;;                mojo-nav-forward-block
+;;                mojo-nav-forward-defun
+;;                mojo-nav-forward-sexp
+;;                mojo-nav-forward-sexp-safe
+;;                mojo-nav-forward-statement
+;;                mojo-nav-if-name-main
+;;                mojo-nav-up-list
+;;                ))
+;;   (put sym 'completion-predicate #'mojo--completion-predicate))
 
 (provide 'mojo-mode)
 
