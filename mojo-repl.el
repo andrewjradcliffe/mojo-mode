@@ -170,8 +170,15 @@ probably be using `mojo-repl-send-region-or-line'."
 (defun mojo-repl-send-buffer ()
   "Send the contents of the current buffer to the Mojo REPL."
   (interactive)
-  (mojo-repl--send-string (buffer-substring-no-properties (point-min) (point-max)) 'prefix)
-  )
+  (mojo-repl-send-region (point-min) (point-max)))
+
+;; This could implemented in a more subtle way, but, it works.
+(defun mojo-repl-send-definition ()
+  "Send the contents of the current buffer to the Mojo REPL."
+  (interactive)
+  (save-mark-and-excursion
+    (mark-defun)
+    (mojo-repl-send-region (region-beginning) (region-end))))
 
 ;;; buffer name
 
