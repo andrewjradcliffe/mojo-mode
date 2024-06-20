@@ -403,7 +403,9 @@ class declarations.")
   `(,@mojo-font-lock-keywords-level-1
     ,(rx symbol-start
          (or
+          ;; Mojo
           "fn" "struct" "trait"
+          "var" "alias" "owned" "borrowed" "inout"
           ;; Python
           "and" "del" "from" "not" "while" "as" "elif" "global" "or" "with"
           "assert" "else" "if" "pass" "yield" "break" "except" "import" "class"
@@ -436,11 +438,11 @@ class declarations.")
            "range" "repr" "reversed" "round" "set" "setattr" "slice" "sorted"
            "staticmethod" "str" "sum" "super" "tuple" "type" "vars" "zip"
            "__import__"
-           ;; Mojo 2:
+           ;; Python 2:
            "basestring" "cmp" "execfile" "file" "long" "raw_input" "reduce"
            "reload" "unichr" "unicode" "xrange" "apply" "buffer" "coerce"
            "intern"
-           ;; Mojo 3:
+           ;; Python 3:
            "ascii" "breakpoint" "bytearray" "bytes" "exec"
            ;; Special attributes:
            ;; https://docs.python.org/3/reference/datamodel.html
@@ -491,7 +493,7 @@ sign in chained assignment."
     ;; Builtin Exceptions
     (,(rx symbol-start
           (or
-           ;; Mojo 2 and 3:
+           ;; Python 2 and 3:
            "ArithmeticError" "AssertionError" "AttributeError" "BaseException"
            "BufferError" "BytesWarning" "DeprecationWarning" "EOFError"
            "EnvironmentError" "Exception" "FloatingPointError" "FutureWarning"
@@ -505,9 +507,9 @@ sign in chained assignment."
            "UnicodeEncodeError" "UnicodeError" "UnicodeTranslateError"
            "UnicodeWarning" "UserWarning" "ValueError" "Warning"
            "ZeroDivisionError"
-           ;; Mojo 2:
+           ;; Python 2:
            "StandardError"
-           ;; Mojo 3:
+           ;; Python 3:
            "BlockingIOError" "BrokenPipeError" "ChildProcessError"
            "ConnectionAbortedError" "ConnectionError" "ConnectionRefusedError"
            "ConnectionResetError" "FileExistsError" "FileNotFoundError"
@@ -2426,10 +2428,10 @@ Returns the encoding as a symbol."
   "Return encoding for file.
 Try `mojo-info-encoding-from-cookie', if none is found then
 default to utf-8."
-  ;; If no encoding is defined, then it's safe to use UTF-8: Mojo 2
-  ;; uses ASCII as default while Mojo 3 uses UTF-8.  This means that
+  ;; If no encoding is defined, then it's safe to use UTF-8: Python 2
+  ;; uses ASCII as default while Python 3 uses UTF-8.  This means that
   ;; in the worst case scenario mojo.el will make things work for
-  ;; Mojo 2 files with unicode data and no encoding defined.
+  ;; Python 2 files with unicode data and no encoding defined.
   (or (mojo-info-encoding-from-cookie)
       'utf-8))
 
