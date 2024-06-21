@@ -221,11 +221,13 @@ Both of these happen without prompting."
   :lighter " 🔥"
   :keymap
   `(
-    (,(kbd "C-c C-b")    . mojo-repl-send-buffer)
-    (,(kbd "C-c C-r")    . mojo-repl-send-region)
-    ;; (,(kbd "C-c C-s")    . mojo-repl-prompt-set-inferior-buffer-name-suffix)
     (,(kbd "C-c C-z")    . mojo-repl)
-    (,(kbd "<C-return>") . mojo-repl-send-line))
+    (,(kbd "M-C-x")      . mojo-repl-send-definition)
+    (,(kbd "C-c C-r")    . mojo-repl-send-region)
+    (,(kbd "C-c C-b")    . mojo-repl-send-buffer)
+    (,(kbd "<C-return>") . mojo-repl-send-line)
+    ;; (,(kbd "C-c C-s")    . mojo-repl-prompt-set-inferior-buffer-name-suffix)
+    )
   (when-let ((filename (buffer-file-name)))
     (setq-local default-directory (file-name-directory filename))))
 
