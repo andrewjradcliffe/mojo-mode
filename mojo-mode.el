@@ -401,7 +401,7 @@ class declarations.")
          (or
           ;; Mojo
           "fn" "struct" "trait"
-          "var" "alias" "owned" "borrowed" "inout"
+          "var" "alias" "owned" "borrowed" "inout" "raises" "capturing"
           ;; Python
           "and" "del" "from" "not" "while" "as" "elif" "global" "or" "with"
           "assert" "else" "if" "pass" "yield" "break" "except" "import" "class"
@@ -513,8 +513,7 @@ sign in chained assignment."
            "PermissionError" "ProcessLookupError" "RecursionError"
            "ResourceWarning" "StopAsyncIteration" "TimeoutError"
            ;; OS specific
-           "VMSError" "WindowsError"
-           )
+           "VMSError" "WindowsError")
           symbol-end)
      . font-lock-type-face)
     ;; multiple assignment
